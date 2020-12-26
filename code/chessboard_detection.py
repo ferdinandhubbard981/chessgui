@@ -101,7 +101,7 @@ def get_chessboard(game_state,resolution=(200,200)):
     position = game_state.board_position_on_screen
     factor = position.factor
     factor/=2
-    # factor=1
+    #factor=1
     x1 = position.minX * (factor)
     y1 = position.minY * (factor)
     x2 = position.maxX * (factor)
@@ -109,11 +109,15 @@ def get_chessboard(game_state,resolution=(200,200)):
     # img = np.array(pyautogui.screenshot(region=(x1, y1, x2 - x1, y2 - y1)))
     # sleep(200 / 1000)
     with mss() as sct:
-        monitor = {'top': y1+1, 'left': x1+1, 'width': x2-x1-2 , 'height': (y2-y1)}
+        monitor = {'top': 2*int((y1)), 'left': 2*int((x1)), 'width': 2*int((x2-x1)) , 'height': 2*int((y2-y1))}
+        #pyautogui.screenshot(region=(x1+1, y1+1, x2-x1-2, y2-y1))
+        print(monitor)
         img = np.array(sct.grab(monitor))
     image = cv2.cvtColor(img,cv2.COLOR_RGB2GRAY)
-
+    #cv2.imshow("preresize", img)
+    #cv2.waitKey(0)
     resizedChessBoard = cv2.resize(image,resolution,interpolation=cv2.INTER_CUBIC)
+    #cv2.imshow("postresize", resizedChessBoard)
     return resizedChessBoard
 
 def find_chessboard_from_image1(img):
@@ -123,7 +127,7 @@ def find_chessboard_from_image1(img):
     squares = []
     for gray in cv2.split(img):
         for thrs in range(0, 255, 5):
-            # thrs = 0
+            # thrs = 0d
             if thrs == 0:
                 bin = cv2.Canny(gray, 0, 1)
                 bin = cv2.dilate(bin, None)

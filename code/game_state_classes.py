@@ -46,7 +46,7 @@ class Game_state:
         self.expected_move_to_detect = "" #This variable stores the move we should see next, if we don't see the right one in the next iteration, we wait and try again. This solves the slow transition problem: for instance, starting with e2e4, the screenshot can happen when the pawn is on e3, that is a possible position. We always have to double check that the move is done.
         self.previous_chessboard_image = [] #Storing the chessboard image from previous iteration
         self.executed_moves = [] #Store the move detected on san format
-        self.engine = chess.engine.SimpleEngine.popen_uci("engine/stockfish-11-64")
+        self.engine = chess.engine.SimpleEngine.popen_uci("../engine/stockfish_20090216_x64_bmi2")
         # self.engine = chess.engine.SimpleEngine.popen_uci("engine/komodo-11.01-64-osx")
         self.board = chess.Board() #This object comes from the "chess" package, the moves are stored inside it (and it has other cool features such as showing all the "legal moves")
         self.board_position_on_screen = []
@@ -159,12 +159,15 @@ class Game_state:
         new_board2 = chessboard_detection.get_chessboard(self)
         # cv2.waitKey(10)
         # new_board3 = chessboard_detection.get_chessboard(self)
+        start = time.time()
         while cv2.absdiff(new_board,new_board2).mean()>0:# or cv2.absdiff(new_board,new_board3).mean()>0:
             new_board = chessboard_detection.get_chessboard(self)
             cv2.waitKey(50)
             new_board2 = chessboard_detection.get_chessboard(self)
             # cv2.waitKey(10)
             # new_board3 = chessboard_detection.get_chessboard(self)
+            if (time.time() - start) > 301:
+               raise KeyboardInterrupt
 
 
 
@@ -229,12 +232,16 @@ class Game_state:
 
 
         try:
+            print(self.board)
             info = self.engine.analyse(self.board, chess.engine.Limit(time=0.01))  # chess.engine.Limit(depth=20))
-
+            
             score = info["score"]
-            if strength<=2000:
+            if True:#strength<=2000:
+                print("<2000")
+                think_time = strength / 1000
                 move_time = (strength + (randint(1, variance))) / 1000
                 engine_process = self.engine.play(self.board,  chess.engine.Limit(time=move_time))
+                #sleep((move_time - think_time))
                 
                 # self.board.push(engine_process.move)
                 # score_move = self.engine.analyse(self.board, chess.engine.Limit(time=0.01))["score"]
@@ -311,9 +318,11 @@ class Game_state:
                     self.board.pop()
             
 
-        except EngineTerminatedError:
+        except EngineTerminatedError as e:
+            #print(e)
+            #raise e
             print('restart')
-            self.engine = chess.engine.SimpleEngine.popen_uci("engine/stockfish-11-64")
+            self.engine = chess.engine.SimpleEngine.popen_uci("../engine/stockfish_20090216_x64_bmi2")
             # self.engine = chess.engine.SimpleEngine.popen_uci("engine/komodo-11.01-64-osx")
 
             return 0,0
@@ -332,19 +341,19 @@ class Game_state:
         centerXOrigin, centerYOrigin = self.get_square_center(origin_square)
         centerXDest, centerYDest = self.get_square_center(destination_square)
         factor /= 2
-        centerXOrigin *= factor
-        centerYOrigin *= factor
-        centerXDest *= factor
-        centerYDest *= factor
+        centerXOrigin *= factor * 2
+        centerYOrigin *= factor * 2
+        centerXDest *= factor * 2
+        centerYDest *= factor * 2
         # print(f"preparetime: {time.time()-postthink}")
 
         # mousetime=time.time()
         # Having the positions we can drag the piece:
-        pyautogui.moveTo(int(centerXOrigin), int(centerYOrigin), 0.0001)
+        pyautogui.moveTo(int(centerXOrigin), int(centerYOrigin), 0.0001, pyautogui.easeInBounce)
         # pyautogui.click(clicks=2,button='left')
-        pyautogui.dragTo(int(centerXOrigin), int(centerYOrigin) + 1, button='left', duration=0.2)  # This small click is used to get the focus back on the browser window
+        pyautogui.dragTo(int(centerXOrigin), int(centerYOrigin) + 1, 0.2, pyautogui.easeInElastic, button='left')  # This small click is used to get the focus back on the browser window
 
-        pyautogui.dragTo(int(centerXDest), int(centerYDest), button='left', duration=0.11)
+        pyautogui.dragTo(int(centerXDest), int(centerYDest), 0.11, pyautogui.easeInElastic, button='left')
         # print(f"mousetime: {time.time()-mousetime}")
 
         if best_move.promotion != None:
@@ -389,8 +398,8 @@ class Game_state:
     def build_fen(self,we_are_white,rochade = 'KQkq' ):
         position_detection = chessboard_detection.get_chessboard(self, (1024, 1024))
         self.previous_chessboard_image = chessboard_detection.get_chessboard(self)
-        # cv2.imshow('dsd',position_detection)
-        # cv2.waitKey(0)
+        #cv2.imshow('dsd',position_detection)
+        #cv2.waitKey(0)
         #   board_basics.is_white_on_bottom(position_detection)
         self.we_play_white = we_are_white
 
@@ -398,7 +407,7 @@ class Game_state:
 
         self.moves_to_detect_before_use_engine = 0  # if v.get() else 1
 
-        pieces = sorted(os.listdir('pieces'))
+        pieces = sorted(os.listdir('../pieces'))
 
         vis_glob = np.array([])
         piece_notation = ['b', 'k', 'n', 'p', 'q', 'r', '*', 'B', 'K', 'N', 'P', 'Q', 'R']
@@ -414,7 +423,7 @@ class Game_state:
             image_list = [get_square_image(i, j, position_detection) for j in (range(8) if we_are_white else reversed(range(8)))]
             answers = piece_on_square_list(image_list)
             for answer in answers:
-                im = cv2.imread(os.path.join('pieces', pieces[answer]))
+                im = cv2.imread(os.path.join('../pieces', pieces[answer]))
                 if vis.size == 0:
                     vis = im
                     fen_str += piece_notation[answer]
@@ -579,3 +588,95 @@ def chunks(l, n):
     for i in range(0, len(l), n):
         # Create an index range for l of n items:
         yield l[i:i+n]
+        
+def our_side(state):
+        # TODO use pawns to get side
+        position_detection = chessboard_detection.get_chessboard(state, (800, 800))
+        piece_notation = ['b', 'k', 'n', 'p', 'q', 'r', '*', 'B', 'K', 'N', 'P', 'Q', 'R']
+
+        black_king_position=()
+        white_king_position = ()
+        order = range(8)
+        for i in order:
+            vis = np.array([])
+            # order2 = range(8)
+            image_list = [get_square_image(i, j, position_detection) for j in range(8)]
+            answers = piece_on_square_list(image_list)
+            if piece_notation.index('k') in answers:
+                black_king_position = (i, 0)
+            if piece_notation.index('K') in answers:
+                white_king_position= (i,0)
+
+
+        if not white_king_position or not black_king_position:
+            raise NoValidPosition
+        if black_king_position[0]<white_king_position[0]:
+            return 'white'
+        elif black_king_position[0]>white_king_position[0]:
+            return 'black'
+        else:
+            return 'unsure'
+
+def build_fen_check(game_state, rochade = 'KQkq' ):
+        position_detection = chessboard_detection.get_chessboard(game_state, (1024, 1024))
+        
+        #cv2.imshow('dsd',position_detection)
+        #cv2.waitKey(0)
+        #   board_basics.is_white_on_bottom(position_detection)
+        to_move = 'b'
+
+
+        pieces = sorted(os.listdir('../pieces'))
+
+        vis_glob = np.array([])
+        piece_notation = ['b', 'k', 'n', 'p', 'q', 'r', '*', 'B', 'K', 'N', 'P', 'Q', 'R']
+        fen_str = ''
+
+        # rochade = 'KQkq'
+
+
+        order = reversed(range(8))
+        for i in order:
+            vis = np.array([])
+
+            image_list = [get_square_image(i, j, position_detection) for j in (reversed(range(8)))]
+            answers = piece_on_square_list(image_list)
+            for answer in answers:
+                im = cv2.imread(os.path.join('../pieces', pieces[answer]))
+                if vis.size == 0:
+                    vis = im
+                    fen_str += piece_notation[answer]
+                else:
+                    if False:
+                        vis = np.concatenate((vis,im), axis=1)
+                    else:
+                        vis = np.concatenate((im, vis), axis=1)
+                    fen_str += piece_notation[answer]
+
+            fen_str += '/'
+            if vis_glob.size == 0:
+                vis_glob = vis
+            else:
+                if False:
+                    vis_glob = np.concatenate(( vis_glob,vis), axis=0)
+                else:
+                    vis_glob = np.concatenate((vis, vis_glob), axis=0)
+
+        fen_str = transform_fen_check(fen_str,to_move,rochade)
+        # fen_str= fen_str.replace("  "," ")
+        return fen_str,vis_glob
+
+def transform_fen_check(fen_str, to_move, rochade, en_passant='-',halfmoves='0',move='1'):
+        fen_str = fen_str[:-1] + ' ' + to_move + ' ' + rochade + ' ' + en_passant + ' ' + halfmoves + ' ' + move
+
+        for i in range(len(fen_str)):
+            if fen_str[i] == ' ':
+                break
+            count = 0
+            if fen_str[i] == '*':
+                while fen_str[i] == '*':
+                    count += 1
+
+                    fen_str = fen_str[0: i:] + fen_str[i + 1::]
+                fen_str = fen_str[:i] + str(count) + fen_str[i:]
+        return fen_str

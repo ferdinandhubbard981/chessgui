@@ -1,6 +1,6 @@
-
+import restartgame
 import tkinter as tk
-import ttk
+from tkinter import ttk
 import chessboard_detection
 import board_basics
 from game_state_classes import Game_state
@@ -15,13 +15,42 @@ import sys
 import os
 from game_state_classes import PositionChanged,NoValidPosition
 import tensorflow as tf
-
-
+import time
+timeinmin = 2
 function_parser = ""
 sess = tf.InteractiveSession()
 
-
-
+auto_is_white = True
+keep_going = False
+def resetgame():
+    global auto_is_white
+    global keep_going
+    previouslink = restartgame.getLink()
+    restartgame.refreshBrowser()
+    restartgame.launchNewGameSearch()
+    gamefound = restartgame.checkNewGameFound(previouslink)
+    if gamefound == False:
+        return False
+    colour = "unsure"
+    start = time.time()
+    while colour == "unsure" and (time.time() - start) < 25:
+        colour = restartgame.checkColour()
+    if colour == "white":
+        keep_going = True
+        auto_is_white = True
+    elif colour == "black":
+        firstmoveplayed = False
+        while firstmoveplayed == False and (time.time() - start) < 25:
+            firstmoveplayed = restartgame.checkIfOpponentPlayed()
+            time.sleep(0.2)
+    
+        keep_going = True
+        auto_is_white = False
+    if (time.time() - start) >= 25:
+        return False
+    else:
+        return True
+            
 def clear_logs(logs_text):
     logs_text.delete('1.0', tk.END)
     #add_log("Logs have been cleared:")
@@ -42,9 +71,13 @@ def stop_playing():
     button_start2.grid(column=0, row=0, pady=10)
     slider_str.config(state=tk.ACTIVE)
     slider_var.config(state=tk.ACTIVE)
+    successfulreset = False
+    while successfulreset == False:
+        successfulreset = resetgame()
     # raise SystemExit
 
 def start_playing():
+    start = time.time()
     global function_parser
     global running
     global slider_str
@@ -79,6 +112,8 @@ def start_playing():
     game_state.previous_chessboard_image = resized_chessboard
 
     we_are_white = v.get()
+    if keep_going == True:
+        we_are_white = auto_is_white
     game_state.we_play_white = we_are_white
     fen_str,detected_board = game_state.build_fen(we_are_white)
     try:
@@ -92,7 +127,16 @@ def start_playing():
 
         window.update()
 
-
+        timeleft = ((timeinmin * 60) - (time.time() - start)) / 2
+        if timeleft < 60:
+            variance = 700
+        if timeleft < 20:
+            variance = 300
+        if timeleft < 10:
+            variance = 50
+        if timeleft < 5:
+            variance = 5
+            
         if game_state.moves_to_detect_before_use_engine == 0:
             #add_log("Our turn to play:")
 
@@ -117,7 +161,6 @@ def start_playing():
         except Exception as e:
             print(e)
             stop_playing()
-
 
         
         if function_parser:
@@ -242,7 +285,7 @@ window.wm_attributes("-topmost", 1)
 window.geometry('%dx%d+%d+%d' % (590,730, 1000, 100))
 window.title("ChessVisionBot")
 
-label_title = tk.Label(window,text="Computer Vision based Chessbot for Online-Chess-Websites by Sebastian Koch",anchor="e", wraplength = 300)
+label_title = tk.Label(window,text="Computer Vision based Chessbot",anchor="e", wraplength = 300)
 label_title.grid(column = 0,row = 0,columnspan=2,pady=5)
 
 note = ttk.Notebook(window)
@@ -283,15 +326,15 @@ ttk.Radiobutton(tab1,
 strength = tk.IntVar()
 slider_str = tk.Scale(tab1, from_= 0, to=2000,tickinterval=500, 
                     orient=tk.HORIZONTAL,sliderlength=10,length=250,
-                    resolution=10,label="Time to think [ms]",variable=strength)
-slider_str.set(100)
+                    resolution=10,label="Time to think/strength [ms]",variable=strength)
+slider_str.set(300)
 
 slider_str.grid(column = 0,row = 5,padx=10, pady=10,columnspan=2)
 variance = tk.IntVar()
-slider_var = tk.Scale(tab1, from_= 0, to=2000,tickinterval=500, 
+slider_var = tk.Scale(tab1, from_= 0, to=6000,tickinterval=500, 
                     orient=tk.HORIZONTAL,sliderlength=10,length=250,
                     resolution=10,label="Maximum move delay variance [ms]",variable=variance)
-slider_var.set(1500)
+slider_var.set(900)
 
 slider_var.grid(column = 0,row = 6,padx=10, pady=10,columnspan=2)
 logs_text = tk.Text(tab1,width=45,height=15,background='gray')
@@ -336,14 +379,14 @@ strength2 = tk.IntVar()
 slider_str2 = tk.Scale(tab2, from_= 0, to=2000,tickinterval=500,
                     orient=tk.HORIZONTAL,sliderlength=10,length=250,
                     resolution=10,label="Time to think [ms]",variable=strength2)
-slider_str2.set(100)
+slider_str2.set(300)
 
 slider_str2.grid(column = 0,row = 5,padx=10, pady=10,columnspan=3)
 variance2 = tk.IntVar()
-slider_var2 = tk.Scale(tab2, from_= 0, to=2000,tickinterval=500,
+slider_var2 = tk.Scale(tab2, from_= 0, to=6000,tickinterval=500,
                     orient=tk.HORIZONTAL,sliderlength=10,length=250,
                     resolution=10,label="Maximum move delay variance [ms]",variable=variance2)
-slider_var2.set(1500)
+slider_var2.set(5000)
 
 slider_var2.grid(column = 0,row = 6,padx=10, pady=10,columnspan=3)
 # logs_text2 = tk.Text(tab2,width=45,height=15,background='gray')
@@ -355,4 +398,10 @@ imglabel2 = tk.Label(tab2, image=img2).grid(row=7, column=0,columnspan=2)
 
 
 running = True
-window.mainloop()
+while True:
+    time.sleep(0.01)
+    window.update_idletasks()
+    window.update()
+    if keep_going == True:
+        start_playing()
+#window.mainloop()
