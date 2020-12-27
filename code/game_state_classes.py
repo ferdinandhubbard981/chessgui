@@ -14,7 +14,7 @@ import os
 import time
 import sys 
 
-
+enginepath = "../engine/lc0/lc0.exe"# -w weights.pb"
 from chess.engine import EngineTerminatedError
 
 
@@ -46,7 +46,7 @@ class Game_state:
         self.expected_move_to_detect = "" #This variable stores the move we should see next, if we don't see the right one in the next iteration, we wait and try again. This solves the slow transition problem: for instance, starting with e2e4, the screenshot can happen when the pawn is on e3, that is a possible position. We always have to double check that the move is done.
         self.previous_chessboard_image = [] #Storing the chessboard image from previous iteration
         self.executed_moves = [] #Store the move detected on san format
-        self.engine = chess.engine.SimpleEngine.popen_uci("../engine/stockfish_20090216_x64_bmi2")
+        self.engine = chess.engine.SimpleEngine.popen_uci(enginepath)#"../engine/stockfish_20090216_x64_bmi2")
         # self.engine = chess.engine.SimpleEngine.popen_uci("engine/komodo-11.01-64-osx")
         self.board = chess.Board() #This object comes from the "chess" package, the moves are stored inside it (and it has other cool features such as showing all the "legal moves")
         self.board_position_on_screen = []
@@ -166,7 +166,7 @@ class Game_state:
             new_board2 = chessboard_detection.get_chessboard(self)
             # cv2.waitKey(10)
             # new_board3 = chessboard_detection.get_chessboard(self)
-            if (time.time() - start) > 301:
+            if (time.time() - start) > 300:
                raise KeyboardInterrupt
 
 
@@ -322,7 +322,7 @@ class Game_state:
             #print(e)
             #raise e
             print('restart')
-            self.engine = chess.engine.SimpleEngine.popen_uci("../engine/stockfish_20090216_x64_bmi2")
+            self.engine = chess.engine.SimpleEngine.popen_uci(enginepath)#"../engine/stockfish_20090216_x64_bmi2")
             # self.engine = chess.engine.SimpleEngine.popen_uci("engine/komodo-11.01-64-osx")
 
             return 0,0

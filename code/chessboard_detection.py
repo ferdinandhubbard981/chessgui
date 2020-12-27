@@ -111,7 +111,7 @@ def get_chessboard(game_state,resolution=(200,200)):
     with mss() as sct:
         monitor = {'top': 2*int((y1)), 'left': 2*int((x1)), 'width': 2*int((x2-x1)) , 'height': 2*int((y2-y1))}
         #pyautogui.screenshot(region=(x1+1, y1+1, x2-x1-2, y2-y1))
-        print(monitor)
+        #print(monitor)
         img = np.array(sct.grab(monitor))
     image = cv2.cvtColor(img,cv2.COLOR_RGB2GRAY)
     #cv2.imshow("preresize", img)

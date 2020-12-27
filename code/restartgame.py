@@ -28,6 +28,7 @@ def launchNewGameSearch():
 	time.sleep(0.1)
 	
 def checkNewGameFound(previouslink):
+	print("checking new game found")
 	start = time.time()
 	newlink = previouslink
 	while newlink == previouslink and (time.time() - start) < 60:
