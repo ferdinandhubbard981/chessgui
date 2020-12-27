@@ -121,16 +121,28 @@ def start_playing():
     except Exception as e:
         print(e)
         stop_playing()
+        return
     # print(game_state.get_castling_rights())
 
     while running:
 
         window.update()
+        if (time.time() - start) > (timeinmin * 60 / 2):
+            stop_playing()
+            return
 
         timeleft = ((timeinmin * 60) - (time.time() - start)) / 2
+        if timeleft < 600:
+            variance = 12000
+        if timeleft < 300:
+            variance = 8000
+        if timeleft < 180:
+            variance = 2500
         if timeleft < 60:
             variance = 700
-        if timeleft < 20:
+        if timeleft < 40:
+            variance = 600
+        if timeleft < 30:
             variance = 300
         if timeleft < 10:
             variance = 50
@@ -161,6 +173,7 @@ def start_playing():
         except Exception as e:
             print(e)
             stop_playing()
+            return
 
         
         if function_parser:
@@ -334,7 +347,7 @@ variance = tk.IntVar()
 slider_var = tk.Scale(tab1, from_= 0, to=6000,tickinterval=500, 
                     orient=tk.HORIZONTAL,sliderlength=10,length=250,
                     resolution=10,label="Maximum move delay variance [ms]",variable=variance)
-slider_var.set(900)
+slider_var.set(600)
 
 slider_var.grid(column = 0,row = 6,padx=10, pady=10,columnspan=2)
 logs_text = tk.Text(tab1,width=45,height=15,background='gray')
