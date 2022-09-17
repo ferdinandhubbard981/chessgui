@@ -16,7 +16,7 @@ import os
 from game_state_classes import PositionChanged,NoValidPosition
 import tensorflow as tf
 import time
-timeinmin = 2
+timeinmin = 10
 function_parser = ""
 sess = tf.InteractiveSession()
 
@@ -132,22 +132,22 @@ def start_playing():
             return
 
         timeleft = ((timeinmin * 60) - (time.time() - start)) / 2
-        if timeleft < 600:
-            variance = 12000
-        if timeleft < 300:
-            variance = 8000
-        if timeleft < 180:
-            variance = 2500
-        if timeleft < 60:
-            variance = 700
-        if timeleft < 40:
-            variance = 600
-        if timeleft < 30:
-            variance = 300
-        if timeleft < 10:
-            variance = 50
-        if timeleft < 5:
-            variance = 5
+        # if timeleft < 600:
+        #     variance = 12000
+        # if timeleft < 300:
+        #     variance = 8000
+        # if timeleft < 180:
+        #     variance = 2500
+        # if timeleft < 60:
+        #     variance = 700
+        # if timeleft < 40:
+        #     variance = 600
+        # if timeleft < 30:
+        #     variance = 300
+        # if timeleft < 10:
+        #     variance = 50
+        # if timeleft < 5:
+        #     variance = 5
             
         if game_state.moves_to_detect_before_use_engine == 0:
             #add_log("Our turn to play:")
@@ -340,14 +340,14 @@ strength = tk.IntVar()
 slider_str = tk.Scale(tab1, from_= 0, to=2000,tickinterval=500, 
                     orient=tk.HORIZONTAL,sliderlength=10,length=250,
                     resolution=10,label="Time to think/strength [ms]",variable=strength)
-slider_str.set(300)
+slider_str.set(100)
 
 slider_str.grid(column = 0,row = 5,padx=10, pady=10,columnspan=2)
 variance = tk.IntVar()
 slider_var = tk.Scale(tab1, from_= 0, to=6000,tickinterval=500, 
                     orient=tk.HORIZONTAL,sliderlength=10,length=250,
                     resolution=10,label="Maximum move delay variance [ms]",variable=variance)
-slider_var.set(600)
+slider_var.set(50)
 
 slider_var.grid(column = 0,row = 6,padx=10, pady=10,columnspan=2)
 logs_text = tk.Text(tab1,width=45,height=15,background='gray')

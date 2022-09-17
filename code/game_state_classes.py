@@ -14,7 +14,8 @@ import os
 import time
 import sys 
 
-enginepath = "../engine/lc0/lc0.exe"# -w weights.pb"
+# enginepath = "../engine/lc0/lc0.exe"# -w weights.pb"
+enginepath = "../engine/stockfish_15_x64"
 from chess.engine import EngineTerminatedError
 
 

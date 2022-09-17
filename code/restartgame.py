@@ -4,17 +4,18 @@ import time
 import chessboard_detection
 import game_state_classes
 import ml_model
-refreshX = 103
-refreshY = 65
-findmatchX = 1516
-findmatchY = 665
-findmatchY2 = 911
-linkX = 559
-linkY = 68
-copyX = 623
-copyY = 135
-randomX = 1813
-randomY = 937
+secondsWaitNewGame = 60
+refreshX = 95
+refreshY = 119
+findmatchX = 1249
+findmatchY = 755
+findmatchY2 = 916
+linkX = 690
+linkY = 118
+copyX = 755
+copyY = 209
+randomX = 1761
+randomY = 713
 def refreshBrowser():
 	time.sleep(5)
 	#launchNewGameSearch()
@@ -23,7 +24,7 @@ def refreshBrowser():
 
 def launchNewGameSearch():
 	time.sleep(1)
-	pygui.click(findmatchX, findmatchY)
+	# pygui.click(findmatchX, findmatchY)
 	pygui.click(findmatchX, findmatchY2)
 	time.sleep(0.1)
 	
@@ -33,7 +34,7 @@ def checkNewGameFound(previouslink):
 	newlink = previouslink
 	while newlink == previouslink and (time.time() - start) < 60:
 		newlink = getLink()
-	if (time.time() - start) > 60:
+	if (time.time() - start) > secondsWaitNewGame:
 		return False
 	
 	else:
